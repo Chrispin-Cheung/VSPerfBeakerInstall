@@ -158,7 +158,7 @@ shift $(($OPTIND - 1))
 vm=master
 bridge=virbr0
 master_image=master.qcow2
-image_path=/var/lib/libvirt/images/
+image_path=/var/lib/libvirt/images
 if [ "$OS_VERSION" = " " ]; then
 	dist=rhel
 else
