@@ -309,7 +309,7 @@ if [ $STOP == "NO" ]; then
 		--virt-type=kvm \
 		--disk path=$image_path/$master_image,format=qcow2,size=8,bus=virtio \
 		--vcpus=$CPUS \
-		--ram=4096 \
+		--ram=8192 \
 		--network bridge=$bridge \
 		--graphics none \
 		--extra-args="$extra" \
@@ -317,13 +317,13 @@ if [ $STOP == "NO" ]; then
 		--location=$location \
 		--noreboot \
 			--serial pty \
-			--serial file,path=/tmp/$vm.console
+			--serial file,path=/tmp/$vm.console &> vminstaller.log
 	else
 		virt-install --name=$vm \
 			--virt-type=kvm \
 			--disk path=$image_path/$master_image,format=qcow2,size=8,bus=virtio \
 			--vcpus=$CPUS \
-			--ram=4096 \
+			--ram=8192 \
 			--network bridge=$bridge \
 			--graphics none \
 			--extra-args="$extra" \
