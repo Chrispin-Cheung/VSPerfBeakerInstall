@@ -21,7 +21,12 @@ enforce_status=`getenforce`
 setenforce permissive
 
 SYS_ARCH=$(uname -m)
-SERVER=download-node-02.eng.bos.redhat.com
+if hostname | grep "pek2.redhat.com" > /dev/null
+then
+	SERVER=download.eng.pek2.redhat.com
+else
+	SERVER=download-node-02.eng.bos.redhat.com
+fi
 ALT_FLAG=$(grep DISTRO /etc/motd | awk -F '=' '{print $2}' | awk -F '-' '{print $2}')
 # we can only define the os-version in the same arch and kernel version.
 OS_VERSION=${OS_VERSION:-"$(grep VERSION_ID /etc/os-release | awk -F '"' '{print $2}')"}
@@ -35,12 +40,14 @@ SAVED="NO"
 STOP="NO"
 lflag="NO"
 sflag="NO"
+PEK="NO"
 progname=$0
 
 function usage () {
    cat <<EOF
 Usage: $progname [-c cpus] [-d debug output to screen] [-l url to compose]
        [-s enable save the generated image] [-u enable use of upstream DPDK]
+       [-p enable to designate the nfs_server to netqe-bj when enabled save]
        [-v enable viommu] [-S image_name] [-V OS_VERSION]
 
 Example:  ./vmcreate.sh -c 3 -l http://example.redhat.com/compose -v -d
@@ -51,7 +58,7 @@ EOF
    exit 0
 }
 
-while getopts c:l:S:V:dhsuv FLAG; do
+while getopts c:l:S:V:dhsuvp FLAG; do
    case $FLAG in
 
    c)  echo "Creating VM with $OPTARG cpus" 
@@ -69,6 +76,8 @@ while getopts c:l:S:V:dhsuv FLAG; do
        DPDK_BUILD="YES";;
    d)  echo "debug enabled" 
        DEBUG="YES";;
+   p)  echo "Designate the nfs_server is netqe-bj"
+       PEK="YES";;
    S)  echo "About to save the guest with $OPTARG name"
        SAVED="YES"
        IMAGE_NAME=$OPTARG
@@ -324,9 +333,14 @@ if [ $STOP == "NO" ]; then
 			--serial pty \
 			--serial file,path=/tmp/$vm.console &> vminstaller.log
 	fi
-
-	nfs_server=netqe-infra01.knqe.lab.eng.bos.redhat.com
-	shared_home=/home/www/html/share
+	if [ $PEK == "YES" ]; then
+		nfs_server=netqe-bj.usersys.redhat.com
+		shared_home=/home/share/
+		DIST_SPATH=/mnt/share/tli/vsperf_img
+	else
+		nfs_server=netqe-infra01.knqe.lab.eng.bos.redhat.com
+		shared_home=/home/www/html/share
+	fi
 
 	if [ $SAVED = "YES" ]; then
 		qemu-img convert -O qcow2 $image_path/$master_image ${IMAGE_NAME}.qcow2
