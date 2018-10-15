@@ -280,7 +280,7 @@ yum install -y tuna git nano ftp wget sysstat 1>/root/post_install.log 2>&1
 git clone https://github.com/Chrispin-Cheung/vmscripts.git /root/vmscripts 1>/root/post_install.log 2>&1
 mv /root/vmscripts/* /root/. 1>/root/post_install.log 2>&1
 rm -Rf /root/vmscripts 1>/root/post_install.log 2>&1
-
+sed -i "s/intel_iommu=on/intel_iommu=on iommu=pt/g" /root/setup_rpms.sh
 if [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "NO" ]; then
     /root/setup_rpms.sh 1>/root/post_install.log 2>&1
 elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "NO" ]; then
@@ -317,7 +317,7 @@ if [ $STOP == "NO" ]; then
 		--location=$location \
 		--noreboot \
 			--serial pty \
-			--serial file,path=/tmp/$vm.console &> vminstaller.log
+			--serial file,path=/tmp/$vm.console &> /tmp/vminstaller.log
 	else
 		virt-install --name=$vm \
 			--virt-type=kvm \
@@ -331,7 +331,7 @@ if [ $STOP == "NO" ]; then
 			--location=$location \
 			--noreboot \
 			--serial pty \
-			--serial file,path=/tmp/$vm.console &> vminstaller.log
+			--serial file,path=/tmp/$vm.console &> /tmp/vminstaller.log
 	fi
 	if [ $PEK == "YES" ]; then
 		nfs_server=netqe-bj.usersys.redhat.com
@@ -354,7 +354,8 @@ if [ $STOP == "NO" ]; then
 		umount /mnt/share
 		rm -f ${IMAGE_NAME}.qcow2
 	fi
-
+else
+	echo "The entered OS_VERSION is newer than the host's, can not Create this version"
 fi
 
 rm $dist-vm.ks
