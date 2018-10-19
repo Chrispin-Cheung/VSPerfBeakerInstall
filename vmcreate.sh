@@ -409,24 +409,23 @@ if (( $RHEL_VERSION == 8 )); then
   sed -i "/auth\ / a\repo --name=beaker-AppStream --cost=100 --baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/AppStream/$SYS_ARCH/os" $dist-vm.ks
 fi
 
-
+if [ "LOC" == "China" ]; then
+	nfs_server=netqe-bj.usersys.redhat.com
+	shared_home=/home/share/
+else
+	nfs_server=netqe-infra01.knqe.lab.eng.bos.redhat.com
+	shared_home=/home/www/html/share
+fi
 if [ $STOP == "NO" ]; then
 	echo creating new master image
 	qemu-img create -f qcow2 $image_path/$master_image 40G
 	echo undefining master xml
 	virsh list --all | grep master && virsh undefine master
 	echo calling virt-install
-        if [ "LOC" == "China" ]; then
-		nfs_server=netqe-bj.usersys.redhat.com
-		shared_home=/home/share/
-	else
-		nfs_server=netqe-infra01.knqe.lab.eng.bos.redhat.com
-		shared_home=/home/www/html/share
-	fi
 	if (($RHEL_VERSION == 8)); then
 		[ ! -d /mnt/share ] && mkdir -p /mnt/share
 		mount $nfs_server:$shared_home /mnt/share
-		\cp $dist-vm.ks /mnt/share/vms
+		\cp $dist-vm.ks /mnt/share/vms/ks/
 		umount /mnt/share
 		virt-install --name $vm \
 			--virt-type=kvm \
