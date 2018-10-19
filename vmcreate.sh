@@ -436,7 +436,7 @@ if [ $STOP == "NO" ]; then
 			--graphics none \
 			--accelerate \
 			--location $location \
-			--extra-args "ks=http://$nfs_server/share/vms/$dist-vm.ks" \
+			--extra-args "ks=http://$nfs_server/share/vms/ks/$dist-vm.ks" \
 			--noreboot \
 			--serial pty \
 			--serial file,path=/tmp/$vm.console &> /tmp/vminstaller.log
