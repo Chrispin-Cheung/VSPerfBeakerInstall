@@ -23,12 +23,15 @@ setenforce permissive
 SYS_ARCH=$(uname -m)
 if hostname | grep "pek2.redhat.com" > /dev/null
 then
+	LOC=China
 	SERVER=download.eng.pek2.redhat.com
 else
+	LOC=Westford
 	SERVER=download-node-02.eng.bos.redhat.com
 fi
 ALT_FLAG=$(grep DISTRO /etc/motd | awk -F '=' '{print $2}' | awk -F '-' '{print $2}')
 # we can only define the os-version in the same arch and kernel version.
+RHEL_VERSION=$(cut -f1 -d. /etc/redhat-release | sed 's/[^0-9]//g')
 OS_VERSION=${OS_VERSION:-"$(grep VERSION_ID /etc/os-release | awk -F '"' '{print $2}')"}
 create_date=$(date +%Y%m%d)
 
@@ -127,6 +130,9 @@ do
 				release_branch=rel-eng/latest-RHEL
 				DISTRO=${DISTRO:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
 			fi
+				;;
+		8.0)    release_branch=rel-eng
+			DISTRO=${DISTRO:-"http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os"}
 				;;
 		*)      echo "Not a valid OS Release Version" ;;
 	esac
@@ -251,10 +257,24 @@ autopart --type=plain
 clearpart --all --initlabel --drives=vda
 zerombr
 
-%packages
+%packages --ignoremissing
 @base
 @core
 @network-tools
+%end
+%pre
+set -x
+if command -v python3 >/dev/null ; then
+   fetch /tmp/anamon http://lab-02.rhts.eng.bos.redhat.com/beaker/anamon3
+   python_command="python3"
+elif [ -f /usr/libexec/platform-python ] && \
+     /usr/libexec/platform-python --version 2>&1 | grep -q "Python 3" ; then
+   fetch /tmp/anamon http://lab-02.rhts.eng.bos.redhat.com/beaker/anamon3
+   python_command="/usr/libexec/platform-python"
+else
+   fetch /tmp/anamon http://lab-02.rhts.eng.bos.redhat.com/beaker/anamon
+   python_command="python"
+fi
 %end
 
 %post
@@ -276,7 +296,90 @@ gpgcheck=0
 skip_if_unavailable=1
 REPO
 
-yum install -y tuna git nano ftp wget sysstat 1>/root/post_install.log 2>&1
+if (( $RHEL_VERSION == 8 )); then
+# Add Harness Repo
+cat <<"EOF" >/etc/yum.repos.d/beaker-harness.repo
+[beaker-harness]
+name=beaker-harness
+baseurl=http://beaker.engineering.redhat.com/harness/RedHatEnterpriseLinux8/
+enabled=1
+gpgcheck=0
+EOF
+
+# Add distro and custom Repos
+cat <<"EOF" >/etc/yum.repos.d/beaker-AppStream-debuginfo.repo
+[beaker-AppStream-debuginfo]
+name=beaker-AppStream-debuginfo
+baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/AppStream/$SYS_ARCH/debug/tree
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+EOF
+cat <<"EOF" >/etc/yum.repos.d/beaker-BaseOS-debuginfo.repo
+[beaker-BaseOS-debuginfo]
+name=beaker-BaseOS-debuginfo
+baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/debug/tree
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+EOF
+cat <<"EOF" >/etc/yum.repos.d/beaker-HighAvailability-debuginfo.repo
+[beaker-HighAvailability-debuginfo]
+name=beaker-HighAvailability-debuginfo
+baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/HighAvailability/$SYS_ARCH/debug/tree
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+EOF
+cat <<"EOF" >/etc/yum.repos.d/beaker-ResilientStorage-debuginfo.repo
+[beaker-ResilientStorage-debuginfo]
+name=beaker-ResilientStorage-debuginfo
+baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/ResilientStorage/$SYS_ARCH/debug/tree
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+EOF
+cat <<"EOF" >/etc/yum.repos.d/beaker-AppStream.repo
+[beaker-AppStream]
+name=beaker-AppStream
+baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/AppStream/$SYS_ARCH/os
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+EOF
+cat <<"EOF" >/etc/yum.repos.d/beaker-BaseOS.repo
+[beaker-BaseOS]
+name=beaker-BaseOS
+baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+EOF
+cat <<"EOF" >/etc/yum.repos.d/beaker-HighAvailability.repo
+[beaker-HighAvailability]
+name=beaker-HighAvailability
+baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/HighAvailability/$SYS_ARCH/os
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+EOF
+cat <<"EOF" >/etc/yum.repos.d/beaker-ResilientStorage.repo
+[beaker-ResilientStorage]
+name=beaker-ResilientStorage
+baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/ResilientStorage/$SYS_ARCH/os
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+EOF
+
+fi
+
+# fill the yum cache and redirect output to /dev/null
+# This speeds up yum because of a bug where it will update stdout too often.
+# http://lists.baseurl.org/pipermail/yum-devel/2011-December/008857.html
+yum check-update > /dev/null 2>&1 || true
+
+yum install -y tuna screen bc vim gcc git redhat-lsb-core sg3_utils sg3_utils-libs sg3_utils-devel nano ftp wget sysstat 1>/root/post_install.log 2>&1
 git clone https://github.com/Chrispin-Cheung/vmscripts.git /root/vmscripts 1>/root/post_install.log 2>&1
 mv /root/vmscripts/* /root/. 1>/root/post_install.log 2>&1
 rm -Rf /root/vmscripts 1>/root/post_install.log 2>&1
@@ -297,49 +400,80 @@ shutdown
 
 KS_CFG
 
+
+# add the rhel8 need repo to ks.cfg
+# this avoid reproduce the bug1622734 https://bugzilla.redhat.com/show_bug.cgi?id=1622734
+# also can change the auth method to auth --useshadow --passalgo=sha512
+if (( $RHEL_VERSION == 8 )); then
+  sed -i "/auth\ / a\repo --name=beaker-BaseOS --cost=100 --baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os" $dist-vm.ks
+  sed -i "/auth\ / a\repo --name=beaker-AppStream --cost=100 --baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/AppStream/$SYS_ARCH/os" $dist-vm.ks
+fi
+
+
 if [ $STOP == "NO" ]; then
 	echo creating new master image
 	qemu-img create -f qcow2 $image_path/$master_image 40G
 	echo undefining master xml
 	virsh list --all | grep master && virsh undefine master
 	echo calling virt-install
-
-	if [ $DEBUG == "YES" ]; then
-		virt-install --name=$vm \
-		--virt-type=kvm \
-		--disk path=$image_path/$master_image,format=qcow2,size=8,bus=virtio \
-		--vcpus=$CPUS \
-		--ram=8192 \
-		--network bridge=$bridge \
-		--graphics none \
-		--extra-args="$extra" \
-		--initrd-inject=$dist-vm.ks \
-		--location=$location \
-		--noreboot \
-			--serial pty \
-			--serial file,path=/tmp/$vm.console &> /tmp/vminstaller.log
+        if [ "LOC" == "China" ]; then
+		nfs_server=netqe-bj.usersys.redhat.com
+		shared_home=/home/share/
 	else
-		virt-install --name=$vm \
+		nfs_server=netqe-infra01.knqe.lab.eng.bos.redhat.com
+		shared_home=/home/www/html/share
+	fi
+	if (($RHEL_VERSION == 8)); then
+		[ ! -d /mnt/share ] && mkdir -p /mnt/share
+		mount $nfs_server:$shared_home /mnt/share
+		\cp $dist-vm.ks /mnt/share/vms
+		umount /mnt/share
+		virt-install --name $vm \
 			--virt-type=kvm \
 			--disk path=$image_path/$master_image,format=qcow2,size=8,bus=virtio \
 			--vcpus=$CPUS \
 			--ram=8192 \
 			--network bridge=$bridge \
 			--graphics none \
-			--extra-args="$extra" \
-			--initrd-inject=$dist-vm.ks \
-			--location=$location \
+			--accelerate \
+			--location $location \
+			--extra-args "ks=http://$nfs_server/share/vms/$dist-vm.ks" \
 			--noreboot \
 			--serial pty \
 			--serial file,path=/tmp/$vm.console &> /tmp/vminstaller.log
+	else
+		if [ $DEBUG == "YES" ]; then
+			virt-install --name=$vm \
+				--virt-type=kvm \
+				--disk path=$image_path/$master_image,format=qcow2,size=8,bus=virtio \
+				--vcpus=$CPUS \
+				--ram=8192 \
+				--network bridge=$bridge \
+				--graphics none \
+				--extra-args="$extra" \
+				--initrd-inject=$dist-vm.ks \
+				--location=$location \
+				--noreboot \
+				--serial pty \
+				--serial file,path=/tmp/$vm.console
+		else
+			virt-install --name=$vm \
+				--virt-type=kvm \
+				--disk path=$image_path/$master_image,format=qcow2,size=8,bus=virtio \
+				--vcpus=$CPUS \
+				--ram=8192 \
+				--network bridge=$bridge \
+				--graphics none \
+				--extra-args="$extra" \
+				--initrd-inject=$dist-vm.ks \
+				--location=$location \
+				--noreboot \
+				--serial pty \
+				--serial file,path=/tmp/$vm.console &> /tmp/vminstaller.log
+		fi
 	fi
 	if [ $PEK == "YES" ]; then
-		nfs_server=netqe-bj.usersys.redhat.com
-		shared_home=/home/share/
 		DIST_SPATH=/mnt/share/tli/vsperf_img
-	else
-		nfs_server=netqe-infra01.knqe.lab.eng.bos.redhat.com
-		shared_home=/home/www/html/share
 	fi
 
 	if [ $SAVED = "YES" ]; then
