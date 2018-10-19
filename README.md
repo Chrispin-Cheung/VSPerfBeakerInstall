@@ -8,6 +8,8 @@ provided.
 For beaker tests simply grab your compose location and then apply it 
 to the execution of the script.
 
+Now this scripts support create guest with distro from RHEL7.2-7.5, RHEL7.6,and latest-RHEL-8.0
+
 ```
 MYCOMPOSE=`cat /etc/yum.repos.d/beaker-Server.repo | grep baseurl | cut -c9-`
 
@@ -58,26 +60,46 @@ if you want to save the created guest image,
 you can use -s option to enable it.like this
 	
 	vmcreate.sh -s
-after the script ran, will create a image file on the 
-http://netqe-infra01.knqe.lab.eng.bos.redhat.com/share/vms/
+after the script ran, will create a image file on the nfs server
 
-   if the release is RHEL, will save to http://netqe-infra01.knqe.lab.eng.bos.redhat.com/share/vms/RHEL/
+
+There are two different nfs server location at different place,
+one is in Beijing,China, one is in Boston, the US.
+
+Beijing, nfs_server=http://netqe-bj.usersys.redhat.com/share/vms/
+
+Boston,  nfs_server=http://netqe-infra01.knqe.lab.eng.bos.redhat.com/share/vms/
+
+For RHEL-7,
+
+   if the release is RHEL, will save to http://$nfs_server/share/vms/RHEL/
    
-   if the release is RHEL-ALT , will save to http://netqe-infra01.knqe.lab.eng.bos.redhat.com/share/vms/RHEL/ALT/
+   if the release is RHEL-ALT , will save to http://nfs_server/share/vms/RHEL/ALT/
+   
+For RHEL-8
+
+   it will save to the http://nfs_server/share/vms/RHEL/
    
    the default naming rule of image name is that : RHEL-$ALT_FLAG-$OS_VERSION-$SYSTEM_ARCH-$create_date
    
    the default format of the image is qcow2.
    
    As above, the system is RHEL-7.5, so the ALT_FLAG is null, OS_VERSION is 7.5, SYSTEM_ARCH is x86_64, create_date is 20180724
-   so the image_name is RHEL-7.5-x86_64-20180724.qcow2 and you can find it on http://netqe-infra01.knqe.lab.eng.bos.redhat.com/share/vms/RHEL/
+   so the image_name is RHEL-7.5-x86_64-20180724.qcow2 and you can find it on http://$nfs_server/share/vms/RHEL/
    
 if you want to save the created guest image with you specified name, you can use the -S option with your specfied name.	
 
 	vmcreate.sh -S RHEL-7.5-GA
-   then after finished, you can find the image on http://netqe-infra01.knqe.lab.eng.bos.redhat.com/share/vms/RHEL/
+   then after finished, you can find the image on http://nfs_server/share/vms/RHEL/
+
+
+the special option -p, only used by tli, to save the generated image to her directory in Beijing NFS Server.
+
+ 
+ 
 Note: 
 the default released os version is supported well, just from 7.2 to 7.5.
+
 
 Can not use the -l and -V option at the same time.
 
