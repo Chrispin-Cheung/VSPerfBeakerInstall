@@ -409,7 +409,7 @@ if (( $RHEL_VERSION == 8 )); then
   sed -i "/auth\ / a\repo --name=beaker-AppStream --cost=100 --baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/AppStream/$SYS_ARCH/os" $dist-vm.ks
 fi
 
-if [ "LOC" == "China" ]; then
+if [ "$LOC" == "China" ]; then
 	nfs_server=netqe-bj.usersys.redhat.com
 	shared_home=/home/share/
 else
