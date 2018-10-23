@@ -50,7 +50,7 @@ function usage () {
    cat <<EOF
 Usage: $progname [-c cpus] [-d debug output to screen] [-l url to compose]
        [-s enable save the generated image] [-u enable use of upstream DPDK]
-       [-p enable to designate the nfs_server to netqe-bj when enabled save]
+       [-p enable to designate the DIST_SPATH to the directory of tli when enabled save]
        [-v enable viommu] [-S image_name] [-V OS_VERSION]
 
 Example:  ./vmcreate.sh -c 3 -l http://example.redhat.com/compose -v -d
