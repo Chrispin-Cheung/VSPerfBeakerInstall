@@ -379,7 +379,7 @@ fi
 # http://lists.baseurl.org/pipermail/yum-devel/2011-December/008857.html
 yum check-update > /dev/null 2>&1 || true
 
-yum install -y tuna screen bc vim gcc git redhat-lsb-core sg3_utils sg3_utils-libs sg3_utils-devel nano ftp wget sysstat 1>/root/post_install.log 2>&1
+yum install -y tuna bc vim gcc git nano ftp wget sysstat 1>/root/post_install.log 2>&1
 git clone https://github.com/Chrispin-Cheung/vmscripts.git /root/vmscripts 1>/root/post_install.log 2>&1
 mv /root/vmscripts/* /root/. 1>/root/post_install.log 2>&1
 rm -Rf /root/vmscripts 1>/root/post_install.log 2>&1
