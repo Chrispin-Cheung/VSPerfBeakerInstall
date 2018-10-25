@@ -472,7 +472,11 @@ if [ $STOP == "NO" ]; then
 		fi
 	fi
 	if [ $PEK == "YES" ]; then
-		DIST_SPATH=/mnt/share/tli/vsperf_img
+		if [ "$LOC" == "China" ]; then
+			DIST_SPATH=/mnt/share/tli/vsperf_img
+		else
+			DIST_SPATH=/mnt/share/vms/OVS/VSPERF
+		fi
 	fi
 
 	if [ $SAVED = "YES" ]; then
