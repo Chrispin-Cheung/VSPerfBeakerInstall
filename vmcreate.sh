@@ -109,6 +109,11 @@ fi
 
 if [ "$lflag" = "YES" ]; then
 	OS_VERSION=" "
+	if [[ ${DISTRO: -1} == "/" ]]
+	then
+   		DISTRO=${DISTRO: :-1}
+	fi
+	RHEL_VERSION=`echo $DISTRO | awk -F '/' '{print $(NF-4)}' | awk -F '-' '{print $2}' | awk -F '.' '{print $1}'`
 fi
 
 # Setting the Loction of the compose
@@ -215,6 +220,8 @@ install
 # Use network installation
 url --url=$location
 
+# MyExtraRepos required by RHEL-8
+
 # Use text mode install
 text
 
@@ -263,21 +270,10 @@ zerombr
 @network-tools
 %end
 %pre
-set -x
-if command -v python3 >/dev/null ; then
-   fetch /tmp/anamon http://lab-02.rhts.eng.bos.redhat.com/beaker/anamon3
-   python_command="python3"
-elif [ -f /usr/libexec/platform-python ] && \
-     /usr/libexec/platform-python --version 2>&1 | grep -q "Python 3" ; then
-   fetch /tmp/anamon http://lab-02.rhts.eng.bos.redhat.com/beaker/anamon3
-   python_command="/usr/libexec/platform-python"
-else
-   fetch /tmp/anamon http://lab-02.rhts.eng.bos.redhat.com/beaker/anamon
-   python_command="python"
-fi
 %end
 
 %post
+if (( $RHEL_VERSION == 7 )); then
 cat >/etc/yum.repos.d/beaker-Server.repo <<REPO
 [beaker-Server]
 name=beaker-Server
@@ -286,6 +282,7 @@ enabled=1
 gpgcheck=0
 skip_if_unavailable=1
 REPO
+fi
 
 cat > /etc/yum.repos.d/beaker-tasks.repo << REPO
 [beaker-tasks]
@@ -296,81 +293,65 @@ gpgcheck=0
 skip_if_unavailable=1
 REPO
 
-if (( $RHEL_VERSION == 8 )); then
+if (( $RHEL_VERSION >= 8 )); then
 # Add Harness Repo
-cat <<"EOF" >/etc/yum.repos.d/beaker-harness.repo
+cat <<"REPO" >/etc/yum.repos.d/beaker-harness.repo
 [beaker-harness]
 name=beaker-harness
 baseurl=http://beaker.engineering.redhat.com/harness/RedHatEnterpriseLinux8/
 enabled=1
 gpgcheck=0
-EOF
+REPO
 
 # Add distro and custom Repos
-cat <<"EOF" >/etc/yum.repos.d/beaker-AppStream-debuginfo.repo
-[beaker-AppStream-debuginfo]
-name=beaker-AppStream-debuginfo
-baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/AppStream/$SYS_ARCH/debug/tree
+cat <<"REPO" >/etc/yum.repos.d/beaker-RT.repo
+[beaker-RT]
+name=beaker-RT
+baseurl=${location/BaseOS/RT}
 enabled=1
 gpgcheck=0
 skip_if_unavailable=1
-EOF
-cat <<"EOF" >/etc/yum.repos.d/beaker-BaseOS-debuginfo.repo
-[beaker-BaseOS-debuginfo]
-name=beaker-BaseOS-debuginfo
-baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/debug/tree
+REPO
+cat <<"REPO" >/etc/yum.repos.d/beaker-NFV.repo
+[beaker-NFV]
+name=beaker-NFV
+baseurl=${location/BaseOS/NFV}
 enabled=1
 gpgcheck=0
 skip_if_unavailable=1
-EOF
-cat <<"EOF" >/etc/yum.repos.d/beaker-HighAvailability-debuginfo.repo
-[beaker-HighAvailability-debuginfo]
-name=beaker-HighAvailability-debuginfo
-baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/HighAvailability/$SYS_ARCH/debug/tree
-enabled=1
-gpgcheck=0
-skip_if_unavailable=1
-EOF
-cat <<"EOF" >/etc/yum.repos.d/beaker-ResilientStorage-debuginfo.repo
-[beaker-ResilientStorage-debuginfo]
-name=beaker-ResilientStorage-debuginfo
-baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/ResilientStorage/$SYS_ARCH/debug/tree
-enabled=1
-gpgcheck=0
-skip_if_unavailable=1
-EOF
-cat <<"EOF" >/etc/yum.repos.d/beaker-AppStream.repo
-[beaker-AppStream]
-name=beaker-AppStream
-baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/AppStream/$SYS_ARCH/os
-enabled=1
-gpgcheck=0
-skip_if_unavailable=1
-EOF
-cat <<"EOF" >/etc/yum.repos.d/beaker-BaseOS.repo
+REPO
+cat <<"REPO" >/etc/yum.repos.d/beaker-BaseOS.repo
 [beaker-BaseOS]
 name=beaker-BaseOS
-baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os
+baseurl=$location
 enabled=1
 gpgcheck=0
 skip_if_unavailable=1
-EOF
-cat <<"EOF" >/etc/yum.repos.d/beaker-HighAvailability.repo
+REPO
+cat <<"REPO" >/etc/yum.repos.d/beaker-AppStream.repo
+[beaker-AppStream]
+name=beaker-AppStream
+baseurl=${location/BaseOS/AppStream}
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+REPO
+cat <<"REPO" >/etc/yum.repos.d/beaker-HighAvailability.repo
 [beaker-HighAvailability]
 name=beaker-HighAvailability
-baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/HighAvailability/$SYS_ARCH/os
+baseurl=${location/BaseOS/HighAvailability}
 enabled=1
 gpgcheck=0
 skip_if_unavailable=1
-EOF
-cat <<"EOF" >/etc/yum.repos.d/beaker-ResilientStorage.repo
+REPO
+cat <<"REPO" >/etc/yum.repos.d/beaker-ResilientStorage.repo
 [beaker-ResilientStorage]
 name=beaker-ResilientStorage
-baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/ResilientStorage/$SYS_ARCH/os
+baseurl=${location/BaseOS/ResilientStorage}
 enabled=1
 gpgcheck=0
 skip_if_unavailable=1
-EOF
+REPO
 
 fi
 
@@ -404,9 +385,16 @@ KS_CFG
 # add the rhel8 need repo to ks.cfg
 # this avoid reproduce the bug1622734 https://bugzilla.redhat.com/show_bug.cgi?id=1622734
 # also can change the auth method to auth --useshadow --passalgo=sha512
-if (( $RHEL_VERSION == 8 )); then
-  sed -i "/auth\ / a\repo --name=beaker-BaseOS --cost=100 --baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os" $dist-vm.ks
-  sed -i "/auth\ / a\repo --name=beaker-AppStream --cost=100 --baseurl=http://$SERVER/$release_branch/latest-RHEL-8/compose/AppStream/$SYS_ARCH/os" $dist-vm.ks
+if (( $RHEL_VERSION >= 8 )); then
+  location_debuginfo=${location/\/os/\/debug\/tree}
+  sed -i "/MyExtraRepos/ a\repo --name=beaker-ResilientStorage-debuginfo --cost=100 --baseurl=${location_debuginfo/BaseOS/ResilientStorage}" $dist-vm.ks
+  sed -i "/MyExtraRepos/ a\repo --name=beaker-HighAvailability-debuginfo --cost=100 --baseurl=${location_debuginfo/BaseOS/HighAvailability}" $dist-vm.ks
+  sed -i "/MyExtraRepos/ a\repo --name=beaker-AppStream-debuginfo --cost=100 --baseurl=${location_debuginfo/BaseOS/AppStream}" $dist-vm.ks
+  sed -i "/MyExtraRepos/ a\repo --name=beaker-BaseOS-debuginfo --cost=100 --baseurl=$location_debuginfo" $dist-vm.ks
+  sed -i "/MyExtraRepos/ a\repo --name=beaker-ResilientStorage --cost=100 --baseurl=${location/BaseOS/ResilientStorage}" $dist-vm.ks
+  sed -i "/MyExtraRepos/ a\repo --name=beaker-HighAvailability --cost=100 --baseurl=${location/BaseOS/HighAvailability}" $dist-vm.ks
+  sed -i "/MyExtraRepos/ a\repo --name=beaker-AppStream --cost=100 --baseurl=${location/BaseOS/AppStream}" $dist-vm.ks
+  sed -i "/MyExtraRepos/ a\repo --name=beaker-BaseOS --cost=100 --baseurl=$location" $dist-vm.ks
 fi
 
 if [ "$LOC" == "China" ]; then
@@ -422,24 +410,40 @@ if [ $STOP == "NO" ]; then
 	echo undefining master xml
 	virsh list --all | grep master && virsh undefine master
 	echo calling virt-install
-	if (($RHEL_VERSION == 8)); then
+	if (($RHEL_VERSION >= 8)); then
 		[ ! -d /mnt/share ] && mkdir -p /mnt/share
 		mount $nfs_server:$shared_home /mnt/share
 		\cp $dist-vm.ks /mnt/share/vms/ks/
 		umount /mnt/share
-		virt-install --name $vm \
-			--virt-type=kvm \
-			--disk path=$image_path/$master_image,format=qcow2,size=8,bus=virtio \
-			--vcpus=$CPUS \
-			--ram=8192 \
-			--network bridge=$bridge \
-			--graphics none \
-			--accelerate \
-			--location $location \
-			--extra-args "ks=http://$nfs_server/share/vms/ks/$dist-vm.ks" \
-			--noreboot \
-			--serial pty \
-			--serial file,path=/tmp/$vm.console &> /tmp/vminstaller.log
+		if [ $DEBUG == "YES" ]; then
+			virt-install --name $vm \
+				--virt-type=kvm \
+				--disk path=$image_path/$master_image,format=qcow2,size=8,bus=virtio \
+				--vcpus=$CPUS \
+				--ram=8192 \
+				--network bridge=$bridge \
+				--graphics none \
+				--accelerate \
+				--location $location \
+				--extra-args "ks=http://$nfs_server/share/vms/ks/$dist-vm.ks" \
+				--noreboot \
+				--serial pty \
+				--serial file,path=/tmp/$vm.console
+		else
+			virt-install --name $vm \
+				--virt-type=kvm \
+				--disk path=$image_path/$master_image,format=qcow2,size=8,bus=virtio \
+				--vcpus=$CPUS \
+				--ram=8192 \
+				--network bridge=$bridge \
+				--graphics none \
+				--accelerate \
+				--location $location \
+				--extra-args "ks=http://$nfs_server/share/vms/ks/$dist-vm.ks" \
+				--noreboot \
+				--serial pty \
+				--serial file,path=/tmp/$vm.console &> /tmp/vminstaller.log
+		fi
 	else
 		if [ $DEBUG == "YES" ]; then
 			virt-install --name=$vm \
