@@ -1,5 +1,10 @@
 # vmscripts
 
+To use this VM Installer script, you should clone this code first.
+
+git clone https://github.com/Chrispin-Cheung/VSPerfBeakerInstall.git
+
+
 VM Installer script for use within beaker or other automated tasks.
 
 Allows for creating of a fully tuned VM based on the kernel compose 
@@ -113,7 +118,7 @@ failures will not be shown on the screen. This logic will be added
 later to better indicate a possible failure in installing the VM.
 
 As part of the installation it will clone 
-https://github.com/ctrautma/vmscripts.git inside of the VM and run
+https://github.com/Chrispin-Cheung/vmscripts.git inside of the VM and run
 the setup_rpms.sh script which is responsible for pulling down
 different DPDK versions as well as different useful scripts. Feel
 free to request changes or submit a pull request to this repo to
