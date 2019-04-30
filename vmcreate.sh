@@ -136,6 +136,9 @@ do
 				DISTRO=${DISTRO:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
 			fi
 				;;
+		7.7)	release_branch=rel-eng/latest-RHEL
+			DISTRO=${DISTRO:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
+				;;
 		8.0)    release_branch=rel-eng
 			DISTRO=${DISTRO:-"http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os"}
 				;;
