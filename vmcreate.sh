@@ -98,12 +98,16 @@ while getopts c:l:S:V:dhsuvp FLAG; do
    \?)  usage ;;
    esac
 done
-
-if [ "$ALT_FLAG" = "ALT" ]; then
-	release_branch=released/RHEL-ALT-7
-	DIST_SPATH=/mnt/share/vms/RHEL/ALT
+if (( $RHEL_VERSION == 7 )); then
+	if [ "$ALT_FLAG" = "ALT" ]; then
+		release_branch=released/RHEL-ALT-7
+		DIST_SPATH=/mnt/share/vms/RHEL/ALT
+	else
+		release_branch=released/RHEL-7
+		DIST_SPATH=/mnt/share/vms/RHEL
+	fi
 else
-	release_branch=released/RHEL-7
+	release_branch=released/RHEL-8
 	DIST_SPATH=/mnt/share/vms/RHEL
 fi
 
@@ -137,10 +141,12 @@ do
 			fi
 				;;
 		7.7)	release_branch=rel-eng/latest-RHEL
-			DISTRO=${DISTRO:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
+				DISTRO=${DISTRO:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
 				;;
-		8.0)    release_branch=rel-eng
-			DISTRO=${DISTRO:-"http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os"}
+		8.0)	DISTRO=${DISTRO:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
+				;;
+		8.1)    release_branch=rel-eng
+				DISTRO=${DISTRO:-"http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os"}
 				;;
 		*)      echo "Not a valid OS Release Version" ;;
 	esac
