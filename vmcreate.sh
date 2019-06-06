@@ -91,7 +91,8 @@ while getopts c:l:S:V:dhsuvp FLAG; do
        case $x in
            0)   echo "The entered OS_VERSION is newer than the host's, can not Create this version guest"
                 STOP="YES" ;;
-           *)   OS_VERSION=$OPTARG ;;
+           *)   OS_VERSION=$OPTARG
+                RHEL_VERSION=$(echo $OS_VERSION | awk -F. '{print $1}');;
        esac
        ;;
    h)  echo "found $opt" ; usage ;;
@@ -132,13 +133,7 @@ do
 				;;
 		7.5)	DISTRO=${DISTRO:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
 				;;
-		7.6)	if [ "$ALT_FLAG" = "ALT" ]; then
-				release_branch=rel-eng/latest-RHEL-ALT
-				DISTRO=${DISTRO:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
-			else
-				release_branch=rel-eng/latest-RHEL
-				DISTRO=${DISTRO:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
-			fi
+		7.6)	DISTRO=${DISTRO:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
 				;;
 		7.7)	release_branch=rel-eng/latest-RHEL
 				DISTRO=${DISTRO:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
