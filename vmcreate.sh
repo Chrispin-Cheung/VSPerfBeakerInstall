@@ -164,7 +164,7 @@ do
 done
 ## debug
 #echo $CPUS
-#echo $DISTRO
+echo $DISTRO
 #echo $VIOMMU
 #echo $DPDK_BUILD
 #echo $DEBUG
