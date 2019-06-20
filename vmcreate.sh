@@ -68,7 +68,7 @@ while getopts c:l:S:V:dhsuvp FLAG; do
        CPUS=$OPTARG
        ;;
    l)  echo "Using Location for VM install $OPTARG"
-       DISTRO=$OPTARG
+       COMPOSE=$OPTARG
        lflag="YES"
        ;;
    s)  echo "To save the guest image is enabled"
@@ -114,34 +114,34 @@ fi
 
 if [ "$lflag" = "YES" ]; then
 	OS_VERSION=" "
-	if [[ ${DISTRO: -1} == "/" ]]
+	if [[ ${COMPOSE: -1} == "/" ]]
 	then
-   		DISTRO=${DISTRO: :-1}
+   		COMPOSE=${COMPOSE: :-1}
 	fi
-	RHEL_VERSION=`echo $DISTRO | awk -F '/' '{print $(NF-4)}' | awk -F '-' '{print $2}' | awk -F '.' '{print $1}'`
+	RHEL_VERSION=`echo $COMPOSE | awk -F '/' '{print $(NF-4)}' | awk -F '-' '{print $2}' | awk -F '.' '{print $1}'`
 fi
 
 # Setting the Loction of the compose
 while [ "$lflag" != "YES" ]
 do
 	case $OS_VERSION in
-		7.2)	DISTRO=${DISTRO:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
+		7.2)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
 				;;
-		7.3)    DISTRO=${DISTRO:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
+		7.3)    COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
 				;;
-		7.4)	DISTRO=${DISTRO:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
+		7.4)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
 				;;
-		7.5)	DISTRO=${DISTRO:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
+		7.5)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
 				;;
-		7.6)	DISTRO=${DISTRO:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
+		7.6)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
 				;;
 		7.7)	release_branch=rel-eng/latest-RHEL
-				DISTRO=${DISTRO:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
+				COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
 				;;
-		8.0)	DISTRO=${DISTRO:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
+		8.0)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
 				;;
 		8.1)    release_branch=rel-eng
-				DISTRO=${DISTRO:-"http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os"}
+				COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os"}
 				;;
 		*)      echo "Not a valid OS Release Version" ;;
 	esac
@@ -164,7 +164,7 @@ do
 done
 ## debug
 #echo $CPUS
-echo $DISTRO
+echo $COMPOSE
 #echo $VIOMMU
 #echo $DPDK_BUILD
 #echo $DEBUG
@@ -192,7 +192,7 @@ else
 		dist=rhel-$OS_VERSION
 	fi
 fi
-location=$DISTRO
+location=$COMPOSE
 
 # removed the  redundant kernel parameters which cause can not install guest with RHEL-ALT-7 on power systems
 #extra="ks=file:/$dist-vm.ks console=ttyS0,115200"
