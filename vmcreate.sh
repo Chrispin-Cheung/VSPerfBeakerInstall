@@ -164,7 +164,7 @@ do
 done
 ## debug
 #echo $CPUS
-echo $COMPOSE
+echo "COMMOSE="$COMPOSE
 #echo $VIOMMU
 #echo $DPDK_BUILD
 #echo $DEBUG
