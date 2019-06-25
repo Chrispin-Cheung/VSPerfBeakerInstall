@@ -196,7 +196,7 @@ location=$COMPOSE
 
 # removed the  redundant kernel parameters which cause can not install guest with RHEL-ALT-7 on power systems
 echo "JOBID="$JOBID
-if [ "$JOBID" != "" ] then
+if [ "$JOBID" != "" ]; then
 	extra="ks=file:/$dist-vm.ks console=ttyS0,115200"
 fi
 extra="ks=file:/$dist-vm.ks"
