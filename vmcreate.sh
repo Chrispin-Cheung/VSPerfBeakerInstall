@@ -434,8 +434,7 @@ if [ $STOP == "NO" ]; then
 				--location $location \
 				--extra-args "ks=http://$nfs_server/share/vms/ks/$dist-vm.ks" \
 				--noreboot \
-				--serial pty \
-				--serial file,path=/tmp/$vm.console
+				--console pty,target_type=virtio
 		else
 			virt-install --name $vm \
 				--virt-type=kvm \
@@ -448,8 +447,7 @@ if [ $STOP == "NO" ]; then
 				--location $location \
 				--extra-args "ks=http://$nfs_server/share/vms/ks/$dist-vm.ks" \
 				--noreboot \
-				--serial pty \
-				--serial file,path=/tmp/$vm.console &> /tmp/vminstaller.log
+				--console pty,target_type=virtio,path=/tmp/$vm.console &> /tmp/vminstaller.log
 		fi
 	else
 		if [ $DEBUG == "YES" ]; then
