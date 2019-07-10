@@ -490,7 +490,7 @@ if [ $STOP == "NO" ]; then
 	fi
 
     OVS_PATH=/mnt/share/vms/OVS
-	/usr/bin/sleep 150505050500
+	/usr/bin/sleep 1500
 	if [ $SAVED = "YES" ]; then
 		qemu-img convert -O qcow2 $image_path/$master_image ${IMAGE_NAME}.qcow2
 		#clean the vm and all spend storage
