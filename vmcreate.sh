@@ -425,6 +425,7 @@ if [ $STOP == "NO" ]; then
 		[ ! -d /mnt/share ] && mkdir -p /mnt/share
 		mount $nfs_server:$shared_home /mnt/share
 		\cp $dist-vm.ks /mnt/share/vms/ks/
+		chmod +r $dist-vm.ks 
 		umount /mnt/share
 		if [ $DEBUG == "YES" ]; then
 			virt-install --name $vm \
