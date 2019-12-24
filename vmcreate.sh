@@ -137,14 +137,14 @@ do
 				;;
 		7.7)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
 				;;
-		7.8)	release_branch=rel-eng/latest-RHEL
-				COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
+		7.8)	release_branch=rel-eng
+				COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/latest-RHEL-7/compose/Server/$SYS_ARCH/os"}
 				;;
 		8.0)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
 				;;
 		8.1)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
 				;;
-		8.2)    release_branch=rel-eng
+		8.2)    release_branch=rel-eng/rhel-8/RHEL-8
 				COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os"}
 				;;
 		*)      echo "Not a valid OS Release Version" ;;
