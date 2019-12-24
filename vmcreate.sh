@@ -1,3 +1,126 @@
+#!/bin/bash
+
+#modified the beaker-tasks.repo to support more beaker tasks
+rm -f /etc/yum.repos.d/beaker-tasks.repo
+cat > /etc/yum.repos.d/beaker-tasks.repo << REPO
+[beaker-tasks]
+name=beaker-tasks
+baseurl=http://beaker.engineering.redhat.com/rpms/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1
+REPO
+
+# install the required package for use kvm
+yum install -y virt-install libvirt
+systemctl start libvirtd
+yum install -y qemu-kvm
+
+enforce_status=`getenforce`
+
+setenforce permissive
+
+SYS_ARCH=$(uname -m)
+if hostname | grep "pek2.redhat.com" > /dev/null
+then
+	LOC=China
+	SERVER=download.eng.pek2.redhat.com
+else
+	LOC=Westford
+	SERVER=download-node-02.eng.bos.redhat.com
+fi
+ALT_FLAG=$(grep DISTRO /etc/motd | awk -F '=' '{print $2}' | awk -F '-' '{print $2}')
+# we can only define the os-version in the same arch and kernel version.
+RHEL_VERSION=$(cut -f1 -d. /etc/redhat-release | sed 's/[^0-9]//g')
+OS_VERSION=${OS_VERSION:-"$(grep VERSION_ID /etc/os-release | awk -F '"' '{print $2}')"}
+create_date=$(date +%Y%m%d)
+
+CPUS=3
+DEBUG="NO"
+VIOMMU="NO"
+DPDK_BUILD="NO"
+SAVED="NO"
+STOP="NO"
+lflag="NO"
+sflag="NO"
+PREF="NO"
+progname=$0
+
+function usage () {
+   cat <<EOF
+Usage: $progname [-c cpus] [-d debug output to screen] [-l url to compose]
+       [-s enable save the generated image] [-u enable use of upstream DPDK]
+       [-p enable to self designate the DIST_SPATH in the nfs_server when enabled save]
+       [-v enable viommu] [-S image_name] [-V OS_VERSION]
+
+Example:  ./vmcreate.sh -c 3 -l http://example.redhat.com/compose -v -d
+          ./vmcreate.sh -c 4 -V 7.6 -v -d
+	  ./vmcreate.sh -c 4 -s  # create the host os_version image and save to nfs server
+	  ./vmcreate.sh -c 4 -S RHEL7-VM # create the image and save as RHEL7-VM to nfs server
+EOF
+   exit 0
+}
+
+while getopts c:l:S:V:dhsuvp FLAG; do
+   case $FLAG in
+
+   c)  echo "Creating VM with $OPTARG cpus" 
+       CPUS=$OPTARG
+       ;;
+   l)  echo "Using Location for VM install $OPTARG"
+       COMPOSE=$OPTARG
+       lflag="YES"
+       ;;
+   s)  echo "To save the guest image is enabled"
+       SAVED="YES";;
+   v)  echo "VIOMMU is enabled"
+       VIOMMU="YES";;
+   u)  echo "Building upstream DPDK"
+       DPDK_BUILD="YES";;
+   d)  echo "debug enabled" 
+       DEBUG="YES";;
+   p)  echo "Designate the storage path in the nfs_server"
+       PREF="YES";;
+   S)  echo "About to save the guest with $OPTARG name"
+       SAVED="YES"
+       IMAGE_NAME=$OPTARG
+       sflag="YES"
+       ;;
+   V)  echo "The OS Version for VM install $OPTARG"
+       x=$(echo "$OPTARG $OS_VERSION" | awk '{if ($1 <= $2) print $1 ;else print 0}')
+       case $x in
+           0)   echo "The entered OS_VERSION is newer than the host's, can not Create this version guest"
+                STOP="YES" ;;
+           *)   OS_VERSION=$OPTARG
+                RHEL_VERSION=$(echo $OS_VERSION | awk -F. '{print $1}');;
+       esac
+       ;;
+   h)  echo "found $opt" ; usage ;;
+   \?)  usage ;;
+   esac
+done
+if (( $RHEL_VERSION == 7 )); then
+	if [ "$ALT_FLAG" = "ALT" ]; then
+		release_branch=released/RHEL-ALT-7
+		DIST_SPATH=/mnt/share/vms/RHEL/ALT
+	else
+		release_branch=released/RHEL-7
+		DIST_SPATH=/mnt/share/vms/RHEL
+	fi
+else
+	release_branch=released/RHEL-8
+	DIST_SPATH=/mnt/share/vms/RHEL
+fi
+
+if [ "$lflag" = "YES" ]; then
+	OS_VERSION=" "
+	if [[ ${COMPOSE: -1} == "/" ]]
+	then
+   		COMPOSE=${COMPOSE: :-1}
+	fi
+	RHEL_VERSION=`echo $COMPOSE | awk -F '/' '{print $(NF-4)}' | awk -F '-' '{print $2}' | awk -F '.' '{print $1}'`
+fi
+
 # Setting the Loction of the compose
 while [ "$lflag" != "YES" ]
 do
@@ -12,16 +135,12 @@ do
 				;;
 		7.6)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
 				;;
-		7.7)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
-				;;
-		7.8)	release_branch=rel-eng/latest-RHEL
+		7.7)	release_branch=rel-eng/latest-RHEL
 				COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch-$OS_VERSION/compose/Server/$SYS_ARCH/os"}
 				;;
 		8.0)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
 				;;
-		8.1)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
-				;;
-		8.2)    release_branch=rel-eng
+		8.1)    release_branch=rel-eng
 				COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os"}
 				;;
 		*)      echo "Not a valid OS Release Version" ;;
