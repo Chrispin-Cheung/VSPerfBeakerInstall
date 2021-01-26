@@ -137,14 +137,20 @@ do
 				;;
 		7.7)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
 				;;
-		7.8)	release_branch=rel-eng
+		7.8)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION/Server/$SYS_ARCH/os"}
+				;;
+		7.9)	release_branch=rel-eng
 				COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/latest-RHEL-7/compose/Server/$SYS_ARCH/os"}
 				;;
 		8.0)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
 				;;
 		8.1)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
 				;;
-		8.2)    release_branch=rel-eng/rhel-8/RHEL-8
+		8.2)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
+				;;
+		8.3)	COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/$OS_VERSION.0/BaseOS/$SYS_ARCH/os"}
+				;;
+		8.4)    release_branch=rel-eng/rhel-8/RHEL-8
 				COMPOSE=${COMPOSE:-"http://$SERVER/$release_branch/latest-RHEL-8/compose/BaseOS/$SYS_ARCH/os"}
 				;;
 		*)      echo "Not a valid OS Release Version" ;;
@@ -372,19 +378,19 @@ fi
 yum check-update > /dev/null 2>&1 || true
 
 yum install -y tuna bc vim gcc git nano ftp wget sysstat 1>/root/post_install.log 2>&1
-git clone https://github.com/Chrispin-Cheung/vmscripts.git /root/vmscripts 1>/root/post_install.log 2>&1
-mv /root/vmscripts/* /root/. 1>/root/post_install.log 2>&1
-rm -Rf /root/vmscripts 1>/root/post_install.log 2>&1
-sed -i "s/intel_iommu=on/intel_iommu=on iommu=pt/g" /root/setup_rpms.sh
-if [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "NO" ]; then
-    /root/setup_rpms.sh 1>/root/post_install.log 2>&1
-elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "NO" ]; then
-    /root/setup_rpms.sh -v 1>/root/post_install.log 2>&1
-elif [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "YES" ]; then
-    /root/setup_rpms.sh -u 1>/root/post_install.log 2>&1
-elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "YES" ]; then
-    /root/setup_rpms.sh -u -v 1>/root/post_install.log 2>&1
-fi
+#git clone https://github.com/Chrispin-Cheung/vmscripts.git /root/vmscripts 1>/root/post_install.log 2>&1
+#mv /root/vmscripts/* /root/. 1>/root/post_install.log 2>&1
+#rm -Rf /root/vmscripts 1>/root/post_install.log 2>&1
+#sed -i "s/intel_iommu=on/intel_iommu=on iommu=pt/g" /root/setup_rpms.sh
+#if [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "NO" ]; then
+#    /root/setup_rpms.sh 1>/root/post_install.log 2>&1
+#elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "NO" ]; then
+#    /root/setup_rpms.sh -v 1>/root/post_install.log 2>&1
+#elif [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "YES" ]; then
+#    /root/setup_rpms.sh -u 1>/root/post_install.log 2>&1
+#elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "YES" ]; then
+#    /root/setup_rpms.sh -u -v 1>/root/post_install.log 2>&1
+#fi
 
 %end
 
