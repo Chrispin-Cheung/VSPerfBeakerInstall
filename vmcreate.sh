@@ -378,19 +378,19 @@ fi
 yum check-update > /dev/null 2>&1 || true
 
 yum install -y tuna bc vim gcc git nano ftp wget sysstat 1>/root/post_install.log 2>&1
-#git clone https://github.com/Chrispin-Cheung/vmscripts.git /root/vmscripts 1>/root/post_install.log 2>&1
-#mv /root/vmscripts/* /root/. 1>/root/post_install.log 2>&1
-#rm -Rf /root/vmscripts 1>/root/post_install.log 2>&1
-#sed -i "s/intel_iommu=on/intel_iommu=on iommu=pt/g" /root/setup_rpms.sh
-#if [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "NO" ]; then
-#    /root/setup_rpms.sh 1>/root/post_install.log 2>&1
-#elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "NO" ]; then
-#    /root/setup_rpms.sh -v 1>/root/post_install.log 2>&1
-#elif [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "YES" ]; then
-#    /root/setup_rpms.sh -u 1>/root/post_install.log 2>&1
-#elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "YES" ]; then
-#    /root/setup_rpms.sh -u -v 1>/root/post_install.log 2>&1
-#fi
+git clone https://github.com/Chrispin-Cheung/vmscripts.git /root/vmscripts 1>/root/post_install.log 2>&1
+mv /root/vmscripts/* /root/. 1>/root/post_install.log 2>&1
+rm -Rf /root/vmscripts 1>/root/post_install.log 2>&1
+sed -i "s/intel_iommu=on/intel_iommu=on iommu=pt/g" /root/setup_rpms.sh
+if [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "NO" ]; then
+    /root/setup_rpms.sh 1>/root/post_install.log 2>&1
+elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "NO" ]; then
+    /root/setup_rpms.sh -v 1>/root/post_install.log 2>&1
+elif [ "$VIOMMU" == "NO" ] && [ "$DPDK_BUILD" == "YES" ]; then
+    /root/setup_rpms.sh -u 1>/root/post_install.log 2>&1
+elif [ "$VIOMMU" == "YES" ] && [ "$DPDK_BUILD" == "YES" ]; then
+    /root/setup_rpms.sh -u -v 1>/root/post_install.log 2>&1
+fi
 
 %end
 
